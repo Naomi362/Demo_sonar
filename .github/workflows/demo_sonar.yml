@@ -1,5 +1,4 @@
 name: SonarCloud Scan (Java Maven)
-
 on:
   push:
     branches:
