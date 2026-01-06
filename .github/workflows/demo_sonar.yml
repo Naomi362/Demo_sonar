@@ -46,7 +46,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.projectKey=Naomi362_Mywebsite
+            -Dsonar.projectKey=Naomi362_Demo_sonar
             -Dsonar.organization=naomi362
             -Dsonar.sources=src/main/java
             -Dsonar.tests=src/test/java
