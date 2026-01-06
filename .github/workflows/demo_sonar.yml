@@ -1,4 +1,4 @@
-name: Android POS - SonarCloud Scan
+name: SonarCloud Scan (Java Maven)
 
 on:
   push:
@@ -9,41 +9,37 @@ on:
       - main
 
 jobs:
-  sonarcloud:
+  sonar:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
-
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
-      # 1️⃣ Checkout full history (critical for PR diff & New Code)
+      # 1️⃣ Checkout full history (required for Sonar PR analysis)
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2️⃣ Set up JDK (Android / Java / Kotlin compatible)
-      - name: Set up JDK
+      # 2️⃣ Set up JDK (Spring Boot compatible)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Cache Gradle (speed & stability)
-      - name: Cache Gradle packages
+      # 3️⃣ Cache Maven dependencies
+      - name: Cache Maven packages
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            gradle-${{ runner.os }}
+            maven-${{ runner.os }}
 
-      # 4️⃣ (Optional) Assemble only - no full test, keep CI light
-      - name: Gradle Assemble (no tests)
-        run: ./gradlew assembleDebug
-        continue-on-error: false
+      # 4️⃣ Build project (no tests to keep CI light)
+      - name: Maven Build (skip tests)
+        run: mvn -B clean verify -DskipTests
 
       # 5️⃣ SonarCloud Scan
       - name: SonarCloud Scan
@@ -52,8 +48,8 @@ jobs:
           args: >
             -Dsonar.projectKey=Naomi362_Mywebsite
             -Dsonar.organization=naomi362
-            -Dsonar.sources=.
-            -Dsonar.androidLint.reportPaths=**/lint-results*.xml
-            -Dsonar.java.binaries=**/build
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test/java
+            -Dsonar.java.binaries=target
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
