@@ -1,0 +1,59 @@
+name: Android POS - SonarCloud Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+    steps:
+      # 1️⃣ Checkout full history (critical for PR diff & New Code)
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2️⃣ Set up JDK (Android / Java / Kotlin compatible)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3️⃣ Cache Gradle (speed & stability)
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}
+
+      # 4️⃣ (Optional) Assemble only - no full test, keep CI light
+      - name: Gradle Assemble (no tests)
+        run: ./gradlew assembleDebug
+        continue-on-error: false
+
+      # 5️⃣ SonarCloud Scan
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=Naomi362_Mywebsite
+            -Dsonar.organization=naomi362
+            -Dsonar.sources=.
+            -Dsonar.androidLint.reportPaths=**/lint-results*.xml
+            -Dsonar.java.binaries=**/build
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
